@@ -22,7 +22,7 @@ private:
     const double y_;
 };
 
-bool checkcomb(double nowA0, double nowA, double noww, double nowphi)
+inline bool checkcomb(double nowA0, double nowA, double noww, double nowphi)
 {
     if (nowphi < 0.25 && 1.78 < noww && 1.23 < nowA0 && nowA < 0.83 && nowA0 < 1.37 && 0.74 < nowA && noww < 1.98 && 0.22 < nowphi)
     {
@@ -45,11 +45,14 @@ int main()
         ceres::Problem problem;
         double A0 = 0.305, A = 1.785, w = 0.884, phi = 1.24;
 
+        int count = 0;
+
         // starttime
         int64 start_time = getTickCount();
 
         while (1)
         {
+            count++;
             t = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
             double t_now = (double)t.count();
             src = wm.getMat(t_now); // Is here wrong? (why to divide 1000?) Still, it can run well. But it is unreasonal.
@@ -132,35 +135,38 @@ int main()
 
             // ceres
             problem.AddResidualBlock(new ceres::AutoDiffCostFunction<CostFunctor, 1, 1, 1, 1, 1>(new CostFunctor(xt, yt)), NULL, &A0, &A, &w, &phi);
-
-            ceres::Solver::Options options;
-            options.max_num_iterations = 25;
-            options.linear_solver_type = ceres::DENSE_QR;
-
-            problem.SetParameterLowerBound(&A0, 0, 0.5);
-            problem.SetParameterUpperBound(&A0, 0, 5.0);
-            problem.SetParameterLowerBound(&A, 0, 0.5);
-            problem.SetParameterUpperBound(&A, 0, 5.0);
-            problem.SetParameterLowerBound(&w, 0, 0.5);
-            problem.SetParameterUpperBound(&w, 0, 5.0);
-            problem.SetParameterLowerBound(&phi, 0, 0.1);
-            problem.SetParameterUpperBound(&phi, 0, 3.14);
-
-            ceres::Solver::Summary summary;
-            Solve(options, &problem, &summary);
-
-            if (checkcomb(A0, A, w, phi))
+            if (count > 700 && count % 50 < 10)
             {
-                // endtime
-                int64 end_time = getTickCount();
-                t_sum += (end_time - start_time) / getTickFrequency();
-                break;
+                ceres::Solver::Options options;
+                options.max_num_iterations = 50;
+                options.linear_solver_type = ceres::DENSE_QR;
+
+                problem.SetParameterLowerBound(&A0, 0, 0.5);
+                problem.SetParameterUpperBound(&A0, 0, 5.0);
+                problem.SetParameterLowerBound(&A, 0, 0.5);
+                problem.SetParameterUpperBound(&A, 0, 5.0);
+                problem.SetParameterLowerBound(&w, 0, 0.5);
+                problem.SetParameterUpperBound(&w, 0, 5.0);
+                problem.SetParameterLowerBound(&phi, 0, 0.1);
+                problem.SetParameterUpperBound(&phi, 0, 3.14);
+
+                ceres::Solver::Summary summary;
+                Solve(options, &problem, &summary);
+                if (checkcomb(A0, A, w, phi))
+                {
+                    // endtime
+                    int64 end_time = getTickCount();
+                    t_sum += (end_time - start_time) / getTickFrequency();
+                    break;
+                }
             }
 
             /*code*/
-            imshow("windmill", src);
-            waitKey(1);
+
+            // imshow
+            /* imshow("windmill", src);
+            waitKey(1); */
         }
     }
-    cout << t_sum / N << endl;
+    std::cout << t_sum / N << std::endl;
 }
