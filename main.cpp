@@ -34,7 +34,7 @@ inline bool checkcomb(double nowA0, double nowA, double noww, double nowphi)
 int main()
 {
     double t_sum = 0;
-    const int N = 10;
+    const int N = 100;
     for (int num = 0; num < N; num++)
     {
         std::chrono::milliseconds t = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
@@ -135,30 +135,28 @@ int main()
 
             // ceres
             problem.AddResidualBlock(new ceres::AutoDiffCostFunction<CostFunctor, 1, 1, 1, 1, 1>(new CostFunctor(xt, yt)), NULL, &A0, &A, &w, &phi);
-            if (count > 700 && count % 50 < 10)
+
+            ceres::Solver::Options options;
+            options.max_num_iterations = 25;
+            options.linear_solver_type = ceres::DENSE_QR;
+
+            problem.SetParameterLowerBound(&A0, 0, 0.5);
+            problem.SetParameterUpperBound(&A0, 0, 1.4);
+            problem.SetParameterLowerBound(&A, 0, 0.5);
+            problem.SetParameterUpperBound(&A, 0, 1.0);
+            problem.SetParameterLowerBound(&w, 0, 0.5);
+            problem.SetParameterUpperBound(&w, 0, 1.9);
+            problem.SetParameterLowerBound(&phi, 0, 0.24);
+            problem.SetParameterUpperBound(&phi, 0, 1.25);
+
+            ceres::Solver::Summary summary;
+            Solve(options, &problem, &summary);
+            if (checkcomb(A0, A, w, phi))
             {
-                ceres::Solver::Options options;
-                options.max_num_iterations = 50;
-                options.linear_solver_type = ceres::DENSE_QR;
-
-                problem.SetParameterLowerBound(&A0, 0, 0.5);
-                problem.SetParameterUpperBound(&A0, 0, 5.0);
-                problem.SetParameterLowerBound(&A, 0, 0.5);
-                problem.SetParameterUpperBound(&A, 0, 5.0);
-                problem.SetParameterLowerBound(&w, 0, 0.5);
-                problem.SetParameterUpperBound(&w, 0, 5.0);
-                problem.SetParameterLowerBound(&phi, 0, 0.1);
-                problem.SetParameterUpperBound(&phi, 0, 3.14);
-
-                ceres::Solver::Summary summary;
-                Solve(options, &problem, &summary);
-                if (checkcomb(A0, A, w, phi))
-                {
-                    // endtime
-                    int64 end_time = getTickCount();
-                    t_sum += (end_time - start_time) / getTickFrequency();
-                    break;
-                }
+                // endtime
+                int64 end_time = getTickCount();
+                t_sum += (end_time - start_time) / getTickFrequency();
+                break;
             }
 
             /*code*/
