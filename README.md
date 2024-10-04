@@ -20,7 +20,7 @@
 
 ### 拟合转速参数
 
-- _time 5.90s_
+- _time 1.36299s_
   ![alt text](./image/time.png)
 - 实现思路
   - _install ceres_
@@ -61,3 +61,4 @@
 
 - 省去 _imshow()_
 - 积累一定量数据后，间隔处理数据
+- ~~优化边界条件~~
