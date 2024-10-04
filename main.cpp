@@ -34,7 +34,7 @@ inline bool checkcomb(double nowA0, double nowA, double noww, double nowphi)
 int main()
 {
     double t_sum = 0;
-    const int N = 100;
+    const int N = 10;
     for (int num = 0; num < N; num++)
     {
         std::chrono::milliseconds t = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
